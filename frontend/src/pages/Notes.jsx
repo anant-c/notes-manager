@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Toaster } from "@/components/ui/sonner"
 import { toast } from "sonner"
+import { getNotes, createNote, updateNote, deleteNote } from "@/utils/api";
+
 
 
 
@@ -21,6 +23,8 @@ const Notes = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [formData, setFormData] = useState({ title: "", content: "" });
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const handleLogout = ()=>{
     localStorage.removeItem("Token")
@@ -28,57 +32,48 @@ const Notes = () => {
     navigate("/signin")
   }
 
+  // Load user info
+  useEffect(() => {
+    const data = localStorage.getItem('User Info:');
+    setUserInfo(JSON.parse(data));
+  }, []);
+  
+  // Fetch all notes on load
+  useEffect(() => {
+    fetchNotes();
+  }, []);
 
-  const [notes, setNotes] = useState([
-    {
-      id: "1",
-      title: "Welcome to Notes Manager",
-      content: "This is your first note! You can create, edit, and delete notes here. The backend integration is ready for your custom implementation.",
-      createdAt: new Date("2024-01-01"),
-      updatedAt: new Date("2024-01-01"),
-    },
-    {
-      id: "2", 
-      title: "Features Overview",
-      content: "• Create new notes with rich content\n• Edit existing notes seamlessly\n• Delete notes you no longer need\n• Beautiful gradient design\n• Responsive layout",
-      createdAt: new Date("2024-01-02"),
-      updatedAt: new Date("2024-01-02"),
+  const fetchNotes = async () => {
+    setLoading(true);
+    try {
+      const res = await getNotes();
+      setNotes(res.data);
+    } catch (err) {
+      toast({ title: "Error loading notes", description: err?.response?.data?.message || 'Could not fetch notes', variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  useEffect(()=>{
-    const data = localStorage.getItem('User Info:')
-    const userData = JSON.parse(data)
-    setUserInfo(userData)
-  },[])
-
-
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      toast({
-        title: "Error",
-        description: "Please fill in both title and content",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please fill in both title and content", variant: "destructive" });
       return;
     }
-
-    const newNote = {
-      id: Date.now().toString(),
-      title: formData.title,
-      content: formData.content,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    setNotes([newNote, ...notes]);
-    setFormData({ title: "", content: "" });
-    setIsCreateOpen(false);
-    toast({
-      title: "Success",
-      description: "Note created successfully",
-    });
+    try {
+      const noteData = {
+        userId: userInfo?._id, // make sure your backend expects this
+        title: formData.title,
+        content: formData.content,
+      };
+      const res = await createNote(noteData);
+      setNotes([res.data, ...notes]);
+      setFormData({ title: "", content: "" });
+      setIsCreateOpen(false);
+      toast({ title: "Success", description: "Note created successfully" });
+    } catch (err) {
+      toast({ title: "Error", description: err?.response?.data?.message || 'Could not create note', variant: "destructive" });
+    }
   };
 
   const handleEdit = (note) => {
@@ -87,37 +82,42 @@ const Notes = () => {
     setIsEditOpen(true);
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      toast({
-        title: "Error", 
-        description: "Please fill in both title and content",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Please fill in both title and content", variant: "destructive" });
       return;
     }
-
-    setNotes(notes.map(note => 
-      note.id === editingNote?.id 
-        ? { ...note, title: formData.title, content: formData.content, updatedAt: new Date() }
-        : note
-    ));
-    setFormData({ title: "", content: "" });
-    setEditingNote(null);
-    setIsEditOpen(false);
-    toast({
-      title: "Success",
-      description: "Note updated successfully",
-    });
+    try {
+      const res = await updateNote(editingNote._id, {
+        title: formData.title,
+        content: formData.content,
+      });
+      setNotes(notes.map(n => n._id === editingNote._id ? res.data : n));
+      setFormData({ title: "", content: "" });
+      setEditingNote(null);
+      setIsEditOpen(false);
+      toast({ title: "Success", description: "Note updated successfully" });
+    } catch (err) {
+      toast({ title: "Error", description: err?.response?.data?.message || 'Could not update note', variant: "destructive" });
+    }
   };
 
-  const handleDelete = (id) => {
-    setNotes(notes.filter(note => note.id !== id));
-    toast({
-      title: "Success",
-      description: "Note deleted successfully",
-    });
+  const handleDelete = async (id) => {
+    try {
+      await deleteNote(id);
+      setNotes(notes.filter(n => n._id !== id));
+      toast({ title: "Success", description: "Note deleted successfully" });
+    } catch (err) {
+      toast({ title: "Error", description: err?.response?.data?.message || 'Could not delete note', variant: "destructive" });
+    }
   };
+
+  useEffect(()=>{
+    const data = localStorage.getItem('User Info:')
+    const userData = JSON.parse(data)
+    setUserInfo(userData)
+  },[])
+   
   return (
     <div className='min-h-screen bg-background'>
       <div className="border-b bg-[#F9F6FE]">
@@ -174,7 +174,7 @@ const Notes = () => {
 
       <div className='justify-center mt-10 text-2xl text-wrap flex'>
         Hi 👋, <span className='font-bold italic text-[#8447EE]'>{userInfo?.name.split(" ")[0]}</span> 
-        <Button className="ml-4 hover:cursor-pointer transition-all">
+        <Button className="ml-4 hover:cursor-pointer transition-all" onClick={handleLogout}>
           Sign Out
         </Button>
       </div>

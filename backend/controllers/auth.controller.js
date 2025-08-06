@@ -12,7 +12,7 @@ export const googleSignIn = async(req,res)=>{
         const userRes = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`)
 
         const {email, name, picture} = userRes.data
-        console.log("------------------------------",email, name, picture)
+        // console.log("------------------------------",email, name, picture)
         let user = await User.findOne({email});
 
         if(!user){

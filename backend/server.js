@@ -4,6 +4,7 @@ import { connectDb } from "./config/db.js"
 import cors from "cors"
 import passport from "passport"
 import authRouter from "./routes/auth.router.js"
+import noteRouter from "./routes/note.router.js"
 
 dotenv.config()
 const PORT = process.env.PORT
@@ -13,6 +14,7 @@ const app = express()
 app.use(cors())
 app.use(express.json()) 
 app.use("", authRouter)
+app.use("", noteRouter)
 
 app.listen(PORT,()=>{
     connectDb()
