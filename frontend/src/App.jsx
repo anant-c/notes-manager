@@ -10,7 +10,6 @@ const Notes = lazy(()=>import('./pages/Notes'))
 const PageNotFound = lazy(()=> import('./pages/PageNotFound'))
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   
   const GoogleAuthWrapper = ()=>{
     return(

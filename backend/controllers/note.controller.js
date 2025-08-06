@@ -3,7 +3,8 @@ import Note from '../models/notes.model.js';  // adjust the path if needed
 // Create a new note
 export const createNote = async (req, res) => {
   try {
-    const { userId, title, content } = req.body;
+    const userId = req.userId;
+    const { title, content } = req.body;
 
     if (!userId || !title) {
       return res.status(400).json({ message: "userId and title are required" });
@@ -21,25 +22,12 @@ export const createNote = async (req, res) => {
 // Get all notes
 export const getAllNotes = async (req, res) => {
   try {
-    const notes = await Note.find();
+    const notes = await Note.find({ userId: req.userId }); // Only fetch notes for this user
     res.json(notes);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-// Get a single note by ID
-export const getNoteById = async (req, res) => {
-  try {
-    const note = await Note.findById(req.params.id);
-    if (!note) return res.status(404).json({ message: "Note not found" });
-
-    res.json(note);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // Update note by ID
 export const updateNote = async (req, res) => {
   try {

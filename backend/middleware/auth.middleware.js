@@ -12,7 +12,6 @@ export const authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Adjust key according to JWT payload - you used _id in your sign
     if (decoded._id) {
       req.userId = decoded._id;  
       next();
