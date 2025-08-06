@@ -6,11 +6,20 @@ const noteSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
-    text:{
+    title:{
         type: String,
-        maxLength: 250,
+        maxLength: 125,
+        required: true
+    },
+    content:{
+        type: String,
+        maxLength: 250
     }
-})
+},
+{
+    timestamps: true
+}
+)
 
 const Note = mongoose.model('Note', noteSchema)
 
