@@ -1,5 +1,7 @@
 # Notes Manager (Full Stack, Google OAuth)
 
+## Video Demo: https://youtu.be/vivd7iMPAuc
+
 ## Prerequisites
 - Node.js >= 18
 - npm >= 9.x

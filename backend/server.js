@@ -2,7 +2,6 @@ import express from "express"
 import dotenv from "dotenv"
 import { connectDb } from "./config/db.js"
 import cors from "cors"
-import passport from "passport"
 import authRouter from "./routes/auth.router.js"
 import noteRouter from "./routes/note.router.js"
 
